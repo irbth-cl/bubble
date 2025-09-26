@@ -165,7 +165,6 @@ button:hover{background:#f0f0f0;}
 
     if(type==='sent') showTypingIndicator(msg);
 
-    // Save messages so they persist
     let messages = JSON.parse(localStorage.getItem('bubbleMessages') || '[]');
     messages.push({text,type,timestamp:ts.textContent});
     localStorage.setItem('bubbleMessages', JSON.stringify(messages));
@@ -190,14 +189,12 @@ button:hover{background:#f0f0f0;}
   }
   window.addEventListener('load', loadMessages);
 
-  // Typing indicator
   function showTypingIndicator(){
     const indicator=document.getElementById('typingIndicator');
     indicator.style.display='flex';
     setTimeout(()=>{indicator.style.display='none';},800);
   }
 
-  // --- Placeholder WebSocket code (offline-ready) ---
   let socket = null;
   function initWebSocket(type, customIP){ console.log('WebSocket init', type, customIP); }
 
