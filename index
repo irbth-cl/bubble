@@ -8,11 +8,10 @@
 <!-- PWA Manifest -->
 <link rel="manifest" href="manifest.json">
 
-<!-- Favicons -->
-<link rel="icon" type="image/png" sizes="16x16" href="icons/logo-16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/logo-32.png">
+<!-- Browser Favicon -->
+<link rel="icon" type="image/png" sizes="48x48" href="icons/logo-48.png">
 
-<!-- Theme color -->
+<!-- Theme Color -->
 <meta name="theme-color" content="#ff9a9e">
 
 <style>
