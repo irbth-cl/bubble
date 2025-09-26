@@ -1,0 +1,21 @@
+{
+  "name": "Bubble",
+  "short_name": "Bubble",
+  "description": "Bubble: powered by Mercury",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff9a9e",
+  "icons": [
+    {
+      "src": "icons/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
