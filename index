@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.json">
 
 <!-- Browser Favicon -->
-<link rel="icon" type="image/png" sizes="48x48" href="icons/logo-48.png">
+<link rel="icon" type="image/png" sizes="48x48" href="images/logo-48.png">
 
 <!-- Theme Color -->
 <meta name="theme-color" content="#ff9a9e">
@@ -106,98 +106,82 @@ button:hover{background:#f0f0f0;}
 </div>
 
 <script>
-  // --- Service Worker Registration ---
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('service-worker.js').then(() => console.log('Service Worker registered'));
-  }
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('service-worker.js').then(()=>console.log('Service Worker registered'));
+}
 
-  // --- Loading screen ---
-  window.addEventListener("load", () => {
-    setTimeout(() => {
-      const loading = document.getElementById("loading-screen");
-      loading.style.opacity = 0;
-      setTimeout(() => { loading.style.display = "none"; }, 500);
-    }, 2000);
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    const loading = document.getElementById("loading-screen");
+    loading.style.opacity = 0;
+    setTimeout(()=>{ loading.style.display="none"; }, 500);
+  },2000);
+});
+
+const settingsIcon=document.getElementById('settingsIcon');
+const settingsPanel=document.getElementById('settingsPanel');
+settingsIcon.addEventListener('click',()=>{settingsPanel.style.display='block';});
+function closeSettings(){settingsPanel.style.display='none';}
+
+let recentDevices=JSON.parse(localStorage.getItem('recentDevices')||'[]');
+function updateRecentDevicesUI(){
+  const container=document.getElementById('recentDevices');
+  container.innerHTML='';
+  recentDevices.forEach(ip=>{
+    const btn=document.createElement('button');
+    btn.textContent=ip;
+    btn.onclick=()=>{ initWebSocket('wifiDirect',ip); }
+    container.appendChild(btn);
   });
-
-  // --- Settings panel ---
-  const settingsIcon = document.getElementById('settingsIcon');
-  const settingsPanel = document.getElementById('settingsPanel');
-  settingsIcon.addEventListener('click', ()=>{settingsPanel.style.display='block';});
-  function closeSettings(){settingsPanel.style.display='none';}
-
-  // --- Recent devices ---
-  let recentDevices = JSON.parse(localStorage.getItem('recentDevices') || '[]');
-  function updateRecentDevicesUI() {
-    const container = document.getElementById('recentDevices');
-    container.innerHTML = '';
-    recentDevices.forEach(ip => {
-      const btn = document.createElement('button');
-      btn.textContent = ip;
-      btn.onclick = () => { initWebSocket('wifiDirect', ip); }
-      container.appendChild(btn);
-    });
+}
+updateRecentDevicesUI();
+function addToRecentDevices(ip){
+  if(!recentDevices.includes(ip)){
+    recentDevices.unshift(ip);
+    if(recentDevices.length>5) recentDevices.pop();
+    localStorage.setItem('recentDevices',JSON.stringify(recentDevices));
+    updateRecentDevicesUI();
   }
-  updateRecentDevicesUI();
-  function addToRecentDevices(ip){
-    if(!recentDevices.includes(ip)){
-      recentDevices.unshift(ip);
-      if(recentDevices.length>5) recentDevices.pop();
-      localStorage.setItem('recentDevices', JSON.stringify(recentDevices));
-      updateRecentDevicesUI();
-    }
-  }
+}
 
-  // --- Chat functionality ---
-  function sendMessage(){
-    const input = document.getElementById('messageInput');
-    const text = input.value.trim(); if(!text) return;
-    addMessage(text,'sent'); if(socket) socket.send(text); input.value='';
-  }
+function sendMessage(){
+  const input=document.getElementById('messageInput');
+  const text=input.value.trim(); if(!text) return;
+  addMessage(text,'sent'); if(socket) socket.send(text); input.value='';
+}
 
-  function addMessage(text,type){
-    const chat=document.getElementById('chat');
-    const msg=document.createElement('div'); msg.className=`message ${type}`; msg.textContent=text;
+function addMessage(text,type){
+  const chat=document.getElementById('chat');
+  const msg=document.createElement('div'); msg.className=`message ${type}`; msg.textContent=text;
+  const ts=document.createElement('span'); ts.className='timestamp';
+  const now=new Date(); ts.textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  msg.appendChild(ts); chat.appendChild(msg); chat.scrollTop=chat.scrollHeight;
+  if(type==='sent') showTypingIndicator(msg);
+  let messages=JSON.parse(localStorage.getItem('bubbleMessages')||'[]');
+  messages.push({text,type,timestamp:ts.textContent});
+  localStorage.setItem('bubbleMessages',JSON.stringify(messages));
+}
 
-    const ts=document.createElement('span'); ts.className='timestamp';
-    const now=new Date(); ts.textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-    msg.appendChild(ts); chat.appendChild(msg); chat.scrollTop=chat.scrollHeight;
+function loadMessages(){
+  const chat=document.getElementById('chat');
+  let messages=JSON.parse(localStorage.getItem('bubbleMessages')||'[]');
+  messages.forEach(msg=>{
+    const div=document.createElement('div'); div.className=`message ${msg.type}`; div.textContent=msg.text;
+    const ts=document.createElement('span'); ts.className='timestamp'; ts.textContent=msg.timestamp;
+    div.appendChild(ts); chat.appendChild(div);
+  });
+  chat.scrollTop=chat.scrollHeight;
+}
+window.addEventListener('load',loadMessages);
 
-    if(type==='sent') showTypingIndicator(msg);
+function showTypingIndicator(){
+  const indicator=document.getElementById('typingIndicator');
+  indicator.style.display='flex';
+  setTimeout(()=>{indicator.style.display='none';},800);
+}
 
-    let messages = JSON.parse(localStorage.getItem('bubbleMessages') || '[]');
-    messages.push({text,type,timestamp:ts.textContent});
-    localStorage.setItem('bubbleMessages', JSON.stringify(messages));
-  }
-
-  function loadMessages(){
-    const chat = document.getElementById('chat');
-    let messages = JSON.parse(localStorage.getItem('bubbleMessages') || '[]');
-    messages.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = `message ${msg.type}`;
-        div.textContent = msg.text;
-
-        const ts = document.createElement('span');
-        ts.className = 'timestamp';
-        ts.textContent = msg.timestamp;
-        div.appendChild(ts);
-
-        chat.appendChild(div);
-    });
-    chat.scrollTop = chat.scrollHeight;
-  }
-  window.addEventListener('load', loadMessages);
-
-  function showTypingIndicator(){
-    const indicator=document.getElementById('typingIndicator');
-    indicator.style.display='flex';
-    setTimeout(()=>{indicator.style.display='none';},800);
-  }
-
-  let socket = null;
-  function initWebSocket(type, customIP){ console.log('WebSocket init', type, customIP); }
-
+let socket=null;
+function initWebSocket(type,customIP){ console.log('WebSocket init',type,customIP); }
 </script>
 </body>
 </html>
